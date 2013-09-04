@@ -8,13 +8,11 @@
 # [x] Create output file (csv or txt?)
 # [x] Store each md5 as a csv with 'hash' : 'date' mapping
 
-
 import urllib2
 import argparse
 import csv
 from sys import argv
 from datetime import datetime, date
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--outfile", help="Pull the most recent Malshare digest", required=True)
