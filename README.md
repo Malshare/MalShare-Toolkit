@@ -18,8 +18,6 @@ Tools:
 		 
 Don't forget to set your API Key for wget_malshare && wget_malshare_daily
 
-Don't forget to set your API Key for wget_malshare && wget_malshare_daily
-
 ### Copyright (C) 2013 Malshare Developers.
 
 
