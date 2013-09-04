@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# Copyright (C) 2013 Malshare Developers.
+# Pull sample by MD5 Hash
+ 
+
+import argparse
+import mechanize
+import sys
+import os
+
+api_key =""
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-d", "--download", help="Search / Download Hash", required=True)
+
+	args = parser.parse_args()
+	
+	if (not api_key):
+		print " [x] API Key not entered"
+		sys.exit(1)
+	
+	pull_file(args.download)
+	
+def pull_file(file_hash):
+	try:
+		request = "http://api.malshare.com/sampleshare.php?action=getfile&api_key=%s&md5=%s" % (api_key, file_hash)
+		browser = mechanize.Browser()
+		browser.addheaders = [('User-agent', 'wget_malshare 1.0')]
+		browser.retrieve(request, file_hash)
+		sample_handler = open(file_hash, 'r')
+		sample = sample_handler.read()
+		
+		if (sample == "Sample not found"):
+			print " [x] Sample not Found"
+			os.remove(file_hash)
+			sys.exit(1)
+		if (sample == "ERROR! => Account not activated"):
+			print " [x] Bad API_Key"
+			os.remove(file_hash)
+			sys.exit(1)
+			
+	except:
+		print " [x] Problem connecting.  Please Try again."
+		sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+    

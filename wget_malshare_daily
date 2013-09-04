@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+# Copyright (C) 2013 Malshare Developers.
+# Pull sample by MD5 Hash
+# 
+import argparse
+import mechanize
+import sys
+import os
+import string
+import re
+
+api_key =""
+
+def main():	
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-o", "--outfolder", help="Folder to save samples to", required=True)
+
+	args = parser.parse_args()
+
+	if (not api_key):
+		print " [x] API Key not entered"
+		sys.exit(1)
+
+	if (not os.path.exists(args.outfolder)):
+		os.makedirs(args.outfolder)
+	os.chdir(args.outfolder)
+	
+#	string_check = re.compile("[A-Za-z0-9]")
+
+	md5_list = pull_daily_list()
+	for md5_hash in md5_list:
+		if (md5_hash):
+			print "-" + md5_hash
+			pull_file(md5_hash)
+
+def pull_daily_list():
+	try:
+		request = "http://www.malshare.com/daily/malshare.current.txt"
+		browser = mechanize.Browser()
+		browser.addheaders = [('User-agent', 'wget_malshare daily 1.0')]
+		response = browser.open(request)
+		return response.read().split('\n')
+					
+	except:
+		print " [x] Problem connecting.  Please Try again."
+		sys.exit(1)
+
+
+def pull_file(file_hash):
+	try:
+		request = "http://api.malshare.com/sampleshare.php?action=getfile&api_key=%s&md5=%s" % (api_key, file_hash)
+		browser = mechanize.Browser()
+		browser.addheaders = [('User-agent', 'wget_malshare 1.0')]
+		browser.retrieve(request, file_hash)
+		sample_handler = open(file_hash, 'r')
+		sample = sample_handler.read()
+		
+		if (sample == "Sample not found"):
+			print " [x] Sample not Found"
+			os.remove(file_hash)
+			sys.exit(1)
+		if (sample == "ERROR! => Account not activated"):
+			print " [x] Bad API_Key"
+			os.remove(file_hash)
+			sys.exit(1)
+			
+	except:
+		print " [x] Problem connecting.  Please Try again."
+		sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+    
