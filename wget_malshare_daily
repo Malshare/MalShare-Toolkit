@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 # Copyright (C) 2013 Malshare Developers.
-# Pull sample by MD5 Hash
-# 
+# Pull All Daily MD5 Hashes
+
+
 import argparse
 import mechanize
 import sys
 import os
 import string
-import re
 
 api_key =""
 
