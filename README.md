@@ -20,11 +20,7 @@ Don't forget to set your API Key for wget_malshare && wget_malshare_daily
 
 Don't forget to set your API Key for wget_malshare && wget_malshare_daily
 
-## Copyright (C) 2013 Malshare Developers.
-
-<<<<<<< HEAD
-=======
 ### Copyright (C) 2013 Malshare Developers.
->>>>>>> f52da24c5ecdc694443ec77679355e12c94a3d15
+
 
 
