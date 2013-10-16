@@ -4,70 +4,94 @@
 
 
 import argparse
-import mechanize
+import logging
+import requests
 import sys
 import os
 import string
 
 api_key =""
 
-def main():	
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-o", "--outfolder", help="Folder to save samples to", required=True)
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.WARNING)
 
-	args = parser.parse_args()
+def main():    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-k", "--apikey", help="API Key", required=False)
+    parser.add_argument("-o", "--outfolder", help="Folder to save samples to", required=False)
+    parser.add_argument("-x", "--vxcage", help="VXCage server", required=False)
 
-	if (not api_key):
-		print " [x] API Key not entered"
-		sys.exit(1)
+    args = parser.parse_args()
+    if args.apikey:
+        api_key = args.apikey
 
-	if (not os.path.exists(args.outfolder)):
-		os.makedirs(args.outfolder)
-	os.chdir(args.outfolder)
-	
-#	string_check = re.compile("[A-Za-z0-9]")
+    if (not api_key):
+        logging.error("API Key not entered")
+        sys.exit(1)
 
-	md5_list = pull_daily_list()
-	for md5_hash in md5_list:
-		if (md5_hash):
-			print "-" + md5_hash
-			pull_file(md5_hash)
+    if args.outfolder:
+        if (not os.path.exists(args.outfolder)):
+            os.makedirs(args.outfolder)
+        os.chdir(args.outfolder)
+    
+    for md5_hash in pull_daily_list():
+        if (md5_hash):
+            logging.info("Downloading %s" % md5_hash)
+            pull_file(md5_hash, args.vxcage, args.outfolder)
 
 def pull_daily_list():
-	try:
-		request = "http://www.malshare.com/daily/malshare.current.txt"
-		browser = mechanize.Browser()
-		browser.addheaders = [('User-agent', 'wget_malshare daily 1.0')]
-		response = browser.open(request)
-		return response.read().split('\n')
-					
-	except:
-		print " [x] Problem connecting.  Please Try again."
-		sys.exit(1)
+    try:
+        url = "http://www.malshare.com/daily/malshare.current.txt"
+        user_agent = {'User-agent': 'wget_malshare daily 1.0'}
 
+        r = requests.get(url, headers=user_agent)
+        for line in r.content.split('\n'):
+            logging.debug("Yield line: %s" % line)
+            yield line
+        logging.debug("No more lines")
 
-def pull_file(file_hash):
-	try:
-		request = "http://api.malshare.com/sampleshare.php?action=getfile&api_key=%s&md5=%s" % (api_key, file_hash)
-		browser = mechanize.Browser()
-		browser.addheaders = [('User-agent', 'wget_malshare 1.0')]
-		browser.retrieve(request, file_hash)
-		sample_handler = open(file_hash, 'r')
-		sample = sample_handler.read()
-		
-		if (sample == "Sample not found"):
-			print " [x] Sample not Found"
-			os.remove(file_hash)
-			sys.exit(1)
-		if (sample == "ERROR! => Account not activated"):
-			print " [x] Bad API_Key"
-			os.remove(file_hash)
-			sys.exit(1)
-			
-	except:
-		print " [x] Problem connecting.  Please Try again."
-		sys.exit(1)
+    except Exception as e:
+        logging.error("Problem connecting.  Please Try again.")
+        logging.exception(sys.exc_info())
+        logging.exception(type(e))
+        logging.exception(e.args)
+        logging.exception(e)
+        sys.exit(1)
 
+def pull_file(file_hash, vxcage, outfolder):
+    try:
+        malshare_url = "http://api.malshare.com/sampleshare.php"
+        payload = {'action': 'getfile', 'api_key': api_key, 'md5' : file_hash }
+        user_agent = {'User-agent': 'wget_malshare daily 1.0'}
+
+        r = requests.get(malshare_url, params=payload, headers=user_agent)
+
+        sample = r.content
+
+        if (sample == "Sample not found"):
+            logging.error("Sample not Found")
+            return None
+        if (sample == "ERROR! => Account not activated"):
+            logging.error("Bad API Key")
+            return None
+
+        if outfolder:
+            open(os.path.join(args.outfolder, file_hash),"wb").write(sample)
+            logging.info("Saved %s" % file_hash)
+
+        if vxcage:
+            vxcage_url = vxcage + "/malware/add"
+            files = {'file': sample }
+            payload = {'tags' : 'malshare'}
+            r = requests.post(vxcage_url, files=files, data=payload, headers=user_agent)
+            if r.json()['message'] == 'added':
+                logging.info("Uploaded %s to VXCage" % file_hash)
+    except Exception as e:
+        logging.error("Problem connecting. Please Try again.")
+        logging.exception(sys.exc_info())
+        logging.exception(type(e))
+        logging.exception(e.args)
+        logging.exception(e)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
