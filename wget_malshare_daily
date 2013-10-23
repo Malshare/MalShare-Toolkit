@@ -60,7 +60,7 @@ def pull_daily_list():
 def pull_file(file_hash, vxcage, outfolder):
     try:
         malshare_url = "http://api.malshare.com/sampleshare.php"
-        payload = {'action': 'getfile', 'api_key': api_key, 'md5' : file_hash }
+        payload = {'action': 'getfile', 'api_key': api_key, 'hsdh' : file_hash }
         user_agent = {'User-agent': 'wget_malshare daily 1.0'}
 
         r = requests.get(malshare_url, params=payload, headers=user_agent)
