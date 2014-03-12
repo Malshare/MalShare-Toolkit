@@ -10,8 +10,6 @@ import sys
 import os
 import string
 
-api_key =""
-
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.WARNING)
 
 def main():    
@@ -21,10 +19,8 @@ def main():
     parser.add_argument("-x", "--vxcage", help="VXCage server", required=False)
 
     args = parser.parse_args()
-    if args.apikey:
-        api_key = args.apikey
 
-    if (not api_key):
+    if (not args.apikey):
         logging.error("API Key not entered")
         sys.exit(1)
 
@@ -36,7 +32,7 @@ def main():
     for md5_hash in pull_daily_list():
         if (md5_hash):
             logging.info("Downloading %s" % md5_hash)
-            pull_file(md5_hash, args.vxcage, args.outfolder)
+            pull_file(md5_hash, args.vxcage, args.outfolder, args.apikey)
 
 def pull_daily_list():
     try:
@@ -57,7 +53,7 @@ def pull_daily_list():
         logging.exception(e)
         sys.exit(1)
 
-def pull_file(file_hash, vxcage, outfolder):
+def pull_file(file_hash, vxcage, outfolder, api_key):
     try:
         malshare_url = "http://api.malshare.com/sampleshare.php"
         payload = {'action': 'getfile', 'api_key': api_key, 'hash' : file_hash }
@@ -75,7 +71,7 @@ def pull_file(file_hash, vxcage, outfolder):
             return None
 
         if outfolder:
-            open(os.path.join(args.outfolder, file_hash),"wb").write(sample)
+            open(os.path.join(outfolder, file_hash),"wb").write(sample)
             logging.info("Saved %s" % file_hash)
 
         if vxcage:
