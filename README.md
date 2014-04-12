@@ -8,7 +8,7 @@ Tools:
 
 malshare_digest 
 --------------
-* Generate a CSV file of daily MD5 list *
+*Generate a CSV file of daily MD5 list*
 
 	usage: malshare_digest [-h] -o OUTFILE
 	malshare_digest: error: argument -o/--outfile is required
@@ -16,14 +16,14 @@ malshare_digest
 
 wget_malshare
 --------------
-* Download sample *
+*Download sample*
 
 	usage: wget_malshare [-h] [-k APIKEY] -d DOWNLOAD [-xVXCAGE]
 	wget_malshare: error: argument -d/--download is required
 
 wget_malshare_daily
 --------------
-* Download all samples from the day prior *
+*Download all samples from the day prior*
 
         usage: wget_malshare_daily [-h] [-k APIKEY] -d DOWNLOAD [-x VXCAGE]
         wget_malshare_daily: error: argument -d/--download is required
