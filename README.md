@@ -1,11 +1,10 @@
-MalShare_Toolkit
+MalShare Toolkit
 ==============
+![alt text](https://pbs.twimg.com/profile_images/3468902286/ddcd5e4026b53cc24172f107d6722335.png "Malshare Logo")
 
 
 Set of tools for interacting with MalShare API
-
 Tools:
-
 malshare_digest 
 --------------
 *Generate a CSV file of daily MD5 list*
