@@ -1,6 +1,5 @@
 MalShare Toolkit
 ==============
-![alt text](https://pbs.twimg.com/profile_images/3468902286/ddcd5e4026b53cc24172f107d6722335.png "Malshare Logo")
 
 
 Set of tools for interacting with MalShare API
