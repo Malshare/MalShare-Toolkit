@@ -1,10 +1,10 @@
-##Malshare_Toolkit
+##MalShare_Toolkit
 
-Set of tools for interacting with Malshare API
+Set of tools for interacting with MalShare API
 
 Tools:
 
-	- wget_malshare - Pull Single file from Malshare
+	- wget_malshare - Pull Single file from MalShare
 		Usage:
 		 -d (--download) <HASH>
 		 
@@ -18,7 +18,7 @@ Tools:
 		 
 Don't forget to set your API Key for wget_malshare && wget_malshare_daily
 
-### Copyright (C) 2013 Malshare Developers.
+### Copyright (C) 2013 MalShare Developers.
 
 
 

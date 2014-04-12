@@ -11,6 +11,7 @@ import os
 api_key =""
 
 def main():
+    global api_key
     parser = argparse.ArgumentParser()
     parser.add_argument("-k", "--apikey", help="API Key", required=False)
     parser.add_argument("-d", "--download", help="Search / Download Hash", required=True)
@@ -24,35 +25,34 @@ def main():
         logging.error("API Key not entered")
         sys.exit(1)
     
-    pull_file(args.download, args.vxcage, api_key)
+    pull_file(args.download, args.vxcage, api_key )
     
-def pull_file(file_hash, vxcage, outfolder):
+def pull_file(file_hash, vxcage, api_key):
     try:
-        malshare_url = "http://api.malshare.com/sampleshare.php"
-        payload = {'action': 'getfile', 'api_key': api_key, 'hash' : file_hash }
-        user_agent = {'User-agent': 'wget_malshare daily 1.0'}
+     malshare_url = "http://api.malshare.com/sampleshare.php"
+     payload = {'action': 'getfile', 'api_key': api_key, 'hash' : file_hash }
+     user_agent = {'User-agent': 'wget_malshare daily 1.0'}
 
-        r = requests.get(malshare_url, params=payload, headers=user_agent)
+     r = requests.get(malshare_url, params=payload, headers=user_agent)
 
-        sample = r.content
+     sample = r.content
 
-        if (sample == "Sample not found"):
-            logging.error("Sample not Found")
-            return None
-        if (sample == "ERROR! => Account not activated"):
-            logging.error("Bad API Key")
-            return None
+     if (sample == "Sample not found"):
+         logging.error("Sample not Found")
+         return None
+     if (sample == "ERROR! => Account not activated"):
+         logging.error("Bad API Key")
+         return None
+     open(os.path.join(file_hash),"wb").write(sample)
+     logging.info("Saved %s" % file_hash)
 
-        open(os.path.join(args.outfolder, file_hash),"wb").write(sample)
-        logging.info("Saved %s" % file_hash)
-
-        if vxcage:
-            vxcage_url = vxcage + "/malware/add"
-            files = {'file': sample }
-            payload = {'tags' : 'malshare'}
-            r = requests.post(vxcage_url, files=files, data=payload, headers=user_agent)
-            if r.json()['message'] == 'added':
-                logging.info("Uploaded %s to VXCage" % file_hash)
+     if vxcage:
+         vxcage_url = vxcage + "/malware/add"
+         files = {'file': sample }
+         payload = {'tags' : 'malshare'}
+         r = requests.post(vxcage_url, files=files, data=payload, headers=user_agent)
+         if r.json()['message'] == 'added':
+             logging.info("Uploaded %s to VXCage" % file_hash)
     except Exception as e:
         logging.error("Problem connecting. Please Try again.")
         logging.exception(sys.exc_info())
