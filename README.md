@@ -27,9 +27,6 @@ wget_malshare_daily
         wget_malshare_daily: error: argument -d/--download is required
 
 
-
-
-
 		 
 Don't forget to set your API Key for wget_malshare && wget_malshare_daily
 
