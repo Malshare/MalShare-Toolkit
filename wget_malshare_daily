@@ -27,7 +27,6 @@ def main():
     if args.outfolder:
         if (not os.path.exists(args.outfolder)):
             os.makedirs(args.outfolder)
-        os.chdir(args.outfolder)
     
     for md5_hash in pull_daily_list():
         if (md5_hash):
