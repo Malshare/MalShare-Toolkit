@@ -2,17 +2,21 @@
 # Copyright (C) 2013 Malshare Developers.
 # Pull All Daily MD5 Hashes
 
-
-import argparse
-import logging
-import requests
-import sys
 import os
+import re
+import sys
 import string
+import logging
+import argparse
+import requests
+
+api_key = ""
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.WARNING)
 
-def main():    
+def main(): 
+    global api_key
+   
     parser = argparse.ArgumentParser()
     parser.add_argument("-k", "--apikey", help="API Key", required=False)
     parser.add_argument("-o", "--outfolder", help="Folder to save samples to", required=False)
@@ -20,7 +24,12 @@ def main():
 
     args = parser.parse_args()
 
-    if (not args.apikey):
+    if stored_api_check() == False:
+        if args.apikey:
+            api_key = args.apikey
+
+
+    if (not api_key):
         logging.error("API Key not entered")
         sys.exit(1)
 
@@ -31,7 +40,7 @@ def main():
     for md5_hash in pull_daily_list():
         if (md5_hash):
             logging.info("Downloading %s" % md5_hash)
-            pull_file(md5_hash, args.vxcage, args.outfolder, args.apikey)
+            pull_file(md5_hash, args.vxcage, args.outfolder, api_key)
 
 def pull_daily_list():
     try:
@@ -87,6 +96,28 @@ def pull_file(file_hash, vxcage, outfolder, api_key):
         logging.exception(e.args)
         logging.exception(e)
         sys.exit(1)
+
+def stored_api_check():
+    global api_key
+    try:
+        if ( os.path.exists(os.path.expanduser('~') + '/.malshare' ) ):
+            with open( os.path.expanduser('~') + '/.malshare' ) as handle_api_file:
+                api_key = func_parse_api_key(handle_api_file.readlines())
+                return True
+        elif (  os.path.exists('.malshare' ) ):
+            with open( '.malshare' ) as handle_api_file:
+                api_key = func_parse_api_key(handle_api_file.readlines())
+                return True
+    except IOError:
+        pass
+    return False
+
+def func_parse_api_key(lst_tmp_key):
+    str_tmp_key = "".join(lst_tmp_key).rstrip()
+    if re.match("^[A-Za-z0-9]+$", str_tmp_key):
+        return str_tmp_key
+
+
 
 if __name__ == "__main__":
     main()
