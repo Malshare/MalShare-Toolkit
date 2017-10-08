@@ -1,0 +1,42 @@
+#!/bin/bash
+# Copyright (C) 2013 - 2017 Malshare Developers.
+# Written by Silas Cutler
+# Upload tool for  MalShare API
+
+
+
+API_KEY=""
+
+function usage(){
+	echo "$0 <File to Upload>"
+	echo " - File Uploader for MalShare.com"
+}
+
+
+if [ -z "$API_KEY" ]
+then
+	usage
+	echo ""
+	echo "Please set API Key in script"
+	exit 1
+fi
+
+if [ ! -f "$1" ]
+then
+	usage
+	echo ""
+	echo " [x] Please specify file to upload"
+	exit 1
+fi
+
+RES=$(curl -s -X POST -F "upload=@$1" "https://malshare.com/api.php?api_key=$API_KEY&action=upload")
+echo $RES
+
+if [ "$RES" = "Success" ]
+then
+	MD5HASH=$(md5sum $1 | awk '{ print $1 }' )
+	echo "Sample can be viewed at https://malshare.com/sample.php?action=detail&hash=$MD5HASH"
+else
+	echo "Problem with upload"
+fi
+
