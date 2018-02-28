@@ -2,15 +2,23 @@
 # Copyright (C) 2013 Malshare Developers.
 # Pull All Daily MD5 Hashes
 
+# 02/21/2014 Modified by Jun Xie <jxie2004@gmail.com>
+#     to download a single day: wget_malshare_daily -d 2014-01-27
+#     to download samples within a range: wget_malshare_daily -s 2014-01-27 -e 2014-02-07
+#
+# Sciprt will create the folder named by date automatically under current directory
+
+import argparse
+import logging
+import requests
+import sys
 import os
 import re
 import sys
 import string
-import logging
-import argparse
-import requests
+from datetime import datetime, date, timedelta
 
-api_key = ""
+api_key =""
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.WARNING)
 
@@ -21,30 +29,76 @@ def main():
     parser.add_argument("-k", "--apikey", help="API Key", required=False)
     parser.add_argument("-o", "--outfolder", help="Folder to save samples to", required=False)
     parser.add_argument("-x", "--vxcage", help="VXCage server", required=False)
+    parser.add_argument("-d", "--date", type=str, help="Specify the date to download. If not specified, download today's. Format:yyyy-mm-dd.", required=False)
+    parser.add_argument("-s", "--sdate", type=str, help="Specify the start date to download. Format:yyyy-mm-dd.", required=False)
+    parser.add_argument("-e", "--edate", type=str, help="Specify the end date to download. Format:yyyy-mm-dd.", required=False)
+    global api_key
 
     args = parser.parse_args()
-
-    if stored_api_check() == False:
-        if args.apikey:
-            api_key = args.apikey
-
+    if args.apikey:
+        api_key = args.apikey
 
     if (not api_key):
         logging.error("API Key not entered")
         sys.exit(1)
 
-    if args.outfolder:
-        if (not os.path.exists(args.outfolder)):
-            os.makedirs(args.outfolder)
+    if args.sdate and args.edate:
+        start_date = datetime.strptime(args.sdate, '%Y-%m-%d').date()
+        end_date = datetime.strptime(args.edate, '%Y-%m-%d').date()
+        if end_date < start_date:
+            print("end_date(%s) is earlier than start_date(%s)" % (str(end_date), str(start_date)))
+            sys.exit(1)
+        temp_date = start_date
+        if not args.outfolder:
+            args.outfolder="./"
+        while temp_date <= end_date:
+            temp_date_str = str(temp_date)
+            temp_date += timedelta(days=1)
+            print("%s" % temp_date_str)
+            sub_path = temp_date_str+'/malshare_fileList.'+temp_date_str+'.txt'
+            #if not args.outfolder:
+            outfolder = args.outfolder+temp_date_str
+            if (os.path.exists(outfolder)):
+                #if the directory exist, bypass it, cause we already downloaded this folder
+                continue
+            download_daily(args.vxcage, outfolder, sub_path)
+        sys.exit(0)
+
+    if args.date:
+        date_str = str(datetime.strptime(args.date, '%Y-%m-%d').date())
+        sub_path = date_str+'/malshare_fileList.'+date_str+'.txt'
+
+        # automatically create date directory under current directory if outfolder is not specified
+        if not args.outfolder:
+            args.outfolder = date_str
+    else:
+        sub_path = 'malshare.current.txt'
+    print "sub_path", sub_path
+    #sys.exit(0)
+
+    #download samples of this date
+    download_daily(args.vxcage, args.outfolder, sub_path)
+
+def download_daily(vxcage, outfolder, sub_path):
+    if outfolder:
+        if (not os.path.exists(outfolder)):
+            os.makedirs(outfolder)
+        #os.chdir(args.outfolder)
     
-    for md5_hash in pull_daily_list():
+    for md5_hash in pull_daily_list(sub_path):
+        if "<!DOCTYPE HTML PUBLIC" in md5_hash:
+            print("%s doesn't exist! skip." % sub_path)
+            os.rmdir(outfolder)
+            break
         if (md5_hash):
             logging.info("Downloading %s" % md5_hash)
-            pull_file(md5_hash, args.vxcage, args.outfolder, api_key)
+            print md5_hash
+            pull_file(md5_hash, vxcage, outfolder)
 
-def pull_daily_list():
+def pull_daily_list(sub_path):
     try:
-        url = "http://www.malshare.com/daily/malshare.current.txt"
+        url = "http://www.malshare.com/daily/"+sub_path
+        print url
         user_agent = {'User-agent': 'wget_malshare daily 1.0'}
 
         r = requests.get(url, headers=user_agent)
@@ -59,11 +113,16 @@ def pull_daily_list():
         logging.exception(type(e))
         logging.exception(e.args)
         logging.exception(e)
-        sys.exit(1)
+        logging.error("Return None")
+        yield None
+        pass     # in batch download mode, if one date doesn't exist, skip to next date
 
-def pull_file(file_hash, vxcage, outfolder, api_key):
+def pull_file(file_hash, vxcage, outfolder):
     try:
-        malshare_url = "http://api.malshare.com/sampleshare.php"
+        if not outfolder:
+            outfolder = '.'
+
+        malshare_url = "http://malshare.com/sampleshare.php"
         payload = {'action': 'getfile', 'api_key': api_key, 'hash' : file_hash }
         user_agent = {'User-agent': 'wget_malshare daily 1.0'}
 
@@ -90,7 +149,7 @@ def pull_file(file_hash, vxcage, outfolder, api_key):
             if r.json()['message'] == 'added':
                 logging.info("Uploaded %s to VXCage" % file_hash)
     except Exception as e:
-        logging.error("Problem connecting. Please Try again.")
+        logging.error("pull_file: Problem connecting. Please Try again.")
         logging.exception(sys.exc_info())
         logging.exception(type(e))
         logging.exception(e.args)
