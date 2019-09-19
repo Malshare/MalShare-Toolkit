@@ -13,7 +13,7 @@ import tqdm
 
 api_key = "<API_KEY>"
 
-logging.basicConfig(format = '%(asctime)s %(levelname)s:%(message)s', level = logging.INFO)
+logging.basicConfig(format = '%(asctime)s %(levelname)s:%(message)s', level = logging.WARNING)
 
 
 def download_file_by_hash(file_hash):
@@ -46,7 +46,10 @@ def download_file_by_hash(file_hash):
         sys.exit(1)
 
 
-def download_list(hash_list):
+def download_list(api_k, hash_list):
+    global api_key
+    if api_k:
+        api_key = api_k
     files = json.load(open(hash_list))
     pool = Pool(os.cpu_count())
     for _ in tqdm.tqdm(pool.imap_unordered(download_file_by_hash, files), total = len(files)):
@@ -58,7 +61,4 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--apikey", help = "API Key", required = False)
     parser.add_argument("-f", "--hash_list", help = "File containing list of hashes in json format", required = True)
     args = parser.parse_args()
-    global api_key
-    if args.apikey:
-        api_key = args.apikey
-    download_list(args.hash_list)
+    download_list(args.apikey, args.hash_list)
