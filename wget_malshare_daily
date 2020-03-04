@@ -4,6 +4,7 @@
 
 # 02/21/2014 Modified by Jun Xie <jxie2004@gmail.com>
 #     to download a single day: wget_malshare_daily -d 2014-01-27
+#     to download a today data to "./data/{date}": wget_malshare_daily
 #     to download samples within a range: wget_malshare_daily -s 2014-01-27 -e 2014-02-07
 #
 # Sciprt will create the folder named by date automatically under current directory
@@ -16,6 +17,7 @@ import os
 import re
 import sys
 import string
+import datetime as datetimemod
 from datetime import datetime, date, timedelta
 
 api_key =""
@@ -49,8 +51,7 @@ def main():
             print("end_date(%s) is earlier than start_date(%s)" % (str(end_date), str(start_date)))
             sys.exit(1)
         temp_date = start_date
-        if not args.outfolder:
-            args.outfolder="./"
+
         while temp_date <= end_date:
             temp_date_str = str(temp_date)
             temp_date += timedelta(days=1)
@@ -76,6 +77,9 @@ def main():
     print "sub_path", sub_path
     #sys.exit(0)
 
+    if not args.outfolder:
+        args.outfolder = "./data/" + (datetimemod.datetime.utcnow() + datetimemod.timedelta(days=-1)).strftime('%Y-%m-%d')
+
     #download samples of this date
     download_daily(args.vxcage, args.outfolder, sub_path)
 
@@ -93,6 +97,9 @@ def download_daily(vxcage, outfolder, sub_path):
         if (md5_hash):
             logging.info("Downloading %s" % md5_hash)
             print md5_hash
+            if md5_hash in os.listdir(outfolder):
+                print ("Downloaded %s" % md5_hash)
+                continue
             pull_file(md5_hash, vxcage, outfolder)
 
 def pull_daily_list(sub_path):
